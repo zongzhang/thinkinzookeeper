@@ -129,3 +129,60 @@ QuorumPeerMain开始。
 
 先比zxid，一样的话，再比myid
 
+# 各个服务器角色介绍
+## leader
+1、事务请求的唯一调度者和处理者，保证事务处理的顺序性。  
+2、集群内部各个服务器的调度者。  
+
+## follower
+1、处理客户端非事务请求，转发事务请求给leader服务器。  
+2、参与事务请求Proposal的投票。  
+3、参与leader选举投票。  
+
+## observer
+3.3.0开始引进   
+用在非事务处理上，提高性能  
+
+## 集群间的消息通信
+消息类型大体上分为：数据同步型、服务器初始化型、请求处理型、会话管理型。
+**数据同步**   
+类型：diff，trunc，snap，uptodate  
+
+**服务器初始化型**   
+observerinfo，followerinfo，leaderinfo，ackepoch，newleader，
+
+**请求处理型**  
+requeset，proposal，ack，commit，inform，sync
+
+**会话管理型**  
+ping，revalidate
+
+# 请求处理
+针对客户端的请求，是如何处理的。
+## 会话创建请求
+请求接收，会话创建，预处理，事务处理，事务应用和会话响应。
+
+## 事务请求转发
+follower，observe转发请求
+
+## getdata请求
+
+# 数据与存储
+内存数据存储，磁盘数据存储
+## 内存数据存储
+定时存储到磁盘上。datatree是存储数据的核心。datanode是存储数据的最小单元。zkdatabase内存数据库，管理会话，dattree，事务日志。
+## 事务日志
+dataDir是默认用于存储事务日志的文件，也可以单独分配：dataLogDir
+
+logFormatter，可以将日志转换成可视化的日志。  
+
+日志预分配--》磁盘预分配，64m，避免磁盘Seek
+
+## snapshot数据快照
+和日志不同，没有预分配，可以反应当前使用的内存大小。
+SnapshotFormatter可视化     
+
+## 初始化
+用于将磁盘数据加载到内存。
+
+## 数据同步
