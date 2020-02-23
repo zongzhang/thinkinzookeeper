@@ -65,7 +65,7 @@ wather通知状态与事件一览
 Jute序列化组件。
 
 # 客户端
-几个核心组件
+## 核心组件
 * Zookeeper实例：客户端入口
 * ClientWatchManager：客户端Watcher管理器
 * HostProvider：客户端地址列表管理器
@@ -75,4 +75,57 @@ Jute序列化组件。
 1、设置默认的Wather  
 2、设置Zookeeper服务器地址列表  
 3、创建ClientCnxn  
+
+## HostProvider
+打散，组成循环列表  
+可以自己扩展
+动态列表
+
+## ClinetCnxn
+### Packet
+内部定义的一个对协议层的封装，作为zookeeper请求响应的载体。
+Packet有许多属性，传输时只序列化requestHeader，request，readonly  
+核心队列：outgoingQueue，pendingQueue  
+
+# 会话
+客户端和服务器完成连接后，建立了一个会话。
+## 会话状态 
+大致可分为：connecting，connected，reconnecting，reconnecting，close，等等  
+一般是介于connecting，connected两者之一。  
+
+## 会话创建
+*session*  会话实体，4个基本属性：  
+sessionID：全局唯一  
+TimeOut：  
+TickTime：下次会话超时时间点，为了便于zookeeper对会话实行分桶策略  
+isCloing：  
+
+## 会话管理
+分桶策略：  
+zookeeper的会话管理主要是由SessionTracker负责的，采用了一种特殊的会话管理方式，我们称之为“分桶策略”。所谓分桶策略，是指将类似的会话放在同一区域块中进行管理，以便进行不同的区块隔离处理以及同一区块的统一处理。
+
+分配原则：每个会话的“下次超时时间点”，  
+ExpirationTime_=currentTime+SessionTimeout  
+ExpirationTime = (ExpirationTime_/ExpirationInterval+1) * ExpirationInterval  
+
+心跳检测过程称之为TouchSession  
+
+## 重连
+连接断开：connection_loss,捕获异常，等待重连，然后重新操作。  
+会话失效：session_expried，重新建立连接
+会话转移：session_moved，重新连上，只是是在另一台机子上重连
+
+# 服务器启动
+预启动  
+QuorumPeerMain开始。  
+
+单机模式委托——ZookeeperServerMain进行处理  
+
+集群会初始化Leader选举，这是和单机版最大的区别。  
+
+
+# Leader选举
+三种选举算法，LeaderElection，udp的FastleaderElection和tcp版的FastLeaderElection,3.4.0版本废弃了前两种。  
+
+先比zxid，一样的话，再比myid
 
